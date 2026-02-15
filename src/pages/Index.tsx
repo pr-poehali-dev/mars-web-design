@@ -3,16 +3,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Icon from "@/components/ui/icon";
+import func2url from "../../backend/func2url.json";
 
 const Index = () => {
   const [formData, setFormData] = useState({ name: "", phone: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setFormData({ name: "", phone: "", message: "" });
+    setLoading(true);
+    try {
+      const res = await fetch(func2url["submit-lead"], {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        setFormData({ name: "", phone: "", message: "" });
+        setTimeout(() => setSubmitted(false), 4000);
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoading(false);
+    }
   };
 
   const scrollToForm = () => {
@@ -253,10 +269,11 @@ const Index = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-mars hover:bg-mars-dark text-white h-12 text-base glow-orange"
+                    disabled={loading}
+                    className="w-full bg-mars hover:bg-mars-dark text-white h-12 text-base glow-orange disabled:opacity-60"
                   >
-                    Отправить заявку
-                    <Icon name="Send" size={18} />
+                    {loading ? "Отправляем..." : "Отправить заявку"}
+                    {!loading && <Icon name="Send" size={18} />}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
                     Нажимая кнопку, вы соглашаетесь на обработку персональных данных
